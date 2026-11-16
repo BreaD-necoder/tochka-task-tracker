@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="color-scheme" content="dark">
+  <meta name="theme-color" content="#141619">
+  <meta name="description" content="Личный трекер задач: меньше шума, больше внимания к важному. Данные хранятся в вашем браузере.">
+  <title>Точка — персональный трекер задач</title>
+  <link rel="stylesheet" href="styles.css">
+  <script src="app.js" defer></script>
+</head>
+<body>
+  <svg class="icon-library" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+    <symbol id="i-plus" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></symbol>
+    <symbol id="i-search" viewBox="0 0 24 24"><circle cx="10.5" cy="10.5" r="6.5"/><path d="m16 16 4 4"/></symbol>
+    <symbol id="i-check" viewBox="0 0 24 24"><path d="m5 12 4 4L19 6"/></symbol>
+    <symbol id="i-grid" viewBox="0 0 24 24"><rect x="4" y="4" width="6" height="6" rx="1.5"/><rect x="14" y="4" width="6" height="6" rx="1.5"/><rect x="4" y="14" width="6" height="6" rx="1.5"/><rect x="14" y="14" width="6" height="6" rx="1.5"/></symbol>
+    <symbol id="i-arrow" viewBox="0 0 24 24"><path d="M7 17 17 7M7 7h10v10"/></symbol>
+    <symbol id="i-edit" viewBox="0 0 24 24"><path d="m14 5 5 5M4 20l5-1L20 8a2.1 2.1 0 0 0-5-5L4 14Z"/></symbol>
+    <symbol id="i-trash" viewBox="0 0 24 24"><path d="M3 6h18M9 6V3h6v3M5 6l1 15h12l1-15M10 10v7M14 10v7"/></symbol>
+    <symbol id="i-close" viewBox="0 0 24 24"><path d="m6 6 12 12M18 6 6 18"/></symbol>
+    <symbol id="i-lock" viewBox="0 0 24 24"><rect x="5" y="10" width="14" height="11" rx="3"/><path d="M8 10V7a4 4 0 0 1 8 0v3M12 14v3"/></symbol>
+    <symbol id="i-list" viewBox="0 0 24 24"><path d="M9 6h11M9 12h11M9 18h11M4 6h.01M4 12h.01M4 18h.01"/></symbol>
+  </svg>
+
+  <div class="app-shell">
+    <aside class="sidebar" aria-label="О приложении">
+      <a class="brand" href="./" aria-label="Точка — главная">
+        <span class="brand-mark" aria-hidden="true">т<span></span></span>
+        <span>точка<span class="brand-period">.</span></span>
+      </a>
+      <div class="workspace-label">ЛИЧНОЕ ПРОСТРАНСТВО</div>
+      <div class="nav-item"><svg class="icon"><use href="#i-grid"/></svg> Мои задачи <span class="nav-dot"></span></div>
+      <div class="sidebar-note">
+        <span class="note-line"></span>
+        <p>Большие дела<br>начинаются с одной<br><span>маленькой задачи.</span></p>
+      </div>
+      <div class="privacy-note"><svg class="icon"><use href="#i-lock"/></svg><p>Только для вас<span>Данные в этом браузере</span></p></div>
+    </aside>
+
+    <main class="main">
+      <header class="topbar"><span>Ваше пространство для ясности</span><time id="today"></time></header>
+      <section class="page-heading" aria-labelledby="page-title">
+        <div><div class="eyebrow"><span></span> ФОКУС НА ВАЖНОМ</div><h1 id="page-title">Мои задачи<span>.</span></h1><p>Освободите голову. Всё остальное — здесь.</p></div>
+        <button id="add-task" class="button button-primary" type="button"><svg class="icon"><use href="#i-plus"/></svg>Новая задача</button>
+      </section>
+
+      <div id="storage-warning" class="storage-warning" role="alert" hidden><p id="storage-message"></p><div class="storage-actions"><button id="retry-storage" class="button button-small" type="button">Повторить сохранение</button><button id="reload-storage" class="button button-small" type="button">Загрузить сохранённые</button></div></div>
+      <noscript><div class="storage-warning">Для работы трекера включите JavaScript в браузере.</div></noscript>
+
+      <section class="overview" aria-label="Статистика задач">
+        <div class="stat-card"><div class="stat-label">Всего задач<svg class="icon"><use href="#i-grid"/></svg></div><div class="stat-bottom"><strong id="total-count">0</strong><span>в вашем пространстве</span></div></div>
+        <div class="stat-card"><div class="stat-label">В работе<span class="status-dot"></span></div><div class="stat-bottom"><strong id="active-count">0</strong><span>ждут вашего внимания</span></div></div>
+        <div class="stat-card progress-card"><div class="stat-label">Выполнено<svg class="icon"><use href="#i-check"/></svg></div><div class="stat-bottom"><strong id="completed-count">0</strong><span id="progress-caption">Пока чистый лист</span></div><progress id="task-progress" max="100" value="0" aria-label="Доля выполненных задач"></progress></div>
+      </section>
+
+      <section class="task-section" aria-labelledby="list-heading">
+        <div class="section-heading"><h2 id="list-heading">Список задач <span id="list-count">0</span></h2><span class="sort-note">Сначала важные и активные</span></div>
+        <div class="toolbar">
+          <div class="filters" role="group" aria-label="Фильтр задач">
+            <button class="filter is-active" type="button" data-filter="all" aria-pressed="true">Все <span id="filter-all-count">0</span></button>
+            <button class="filter" type="button" data-filter="active" aria-pressed="false">Активные <span id="filter-active-count">0</span></button>
+            <button class="filter" type="button" data-filter="completed" aria-pressed="false">Выполненные <span id="filter-completed-count">0</span></button>
+          </div>
+          <div class="search-field"><svg class="icon"><use href="#i-search"/></svg><input id="search" type="search" placeholder="Найти задачу…" maxlength="140" aria-label="Поиск по названию"></div>
+        </div>
+        <ul id="task-list" class="task-list" aria-label="Задачи"></ul>
+        <div id="empty-state" class="empty-state" hidden>
+          <div class="empty-icon"><svg class="icon"><use href="#i-list"/></svg><span></span></div>
+          <h3 id="empty-title"></h3><p id="empty-description"></p>
+          <button id="empty-action" class="button button-secondary" type="button"></button>
+        </div>
+        <footer class="list-footer"><span id="result-summary"></span><span>Один шаг за раз <span class="footer-star" aria-hidden="true">✳</span></span></footer>
+      </section>
+      <footer class="page-footer"><span>Меньше шума. Больше сделанного.</span><span>ТОЧКА / ЛИЧНЫЙ ТРЕКЕР</span></footer>
+    </main>
+  </div>
+
+  <dialog id="task-dialog" class="dialog" aria-labelledby="dialog-title">
+    <form id="task-form">
+      <div class="dialog-heading"><div><div class="eyebrow">ОДИН ШАГ ВПЕРЁД</div><h2 id="dialog-title">Новая задача</h2></div><button class="icon-button" type="button" data-close="task-dialog" aria-label="Закрыть форму"><svg class="icon"><use href="#i-close"/></svg></button></div>
+      <label for="task-title">Название <span class="required-note">обязательно</span></label>
+      <input id="task-title" name="title" type="text" maxlength="140" placeholder="Что хотите сделать?" required autocomplete="off" aria-describedby="title-error">
+      <p id="title-error" class="field-error" hidden>Введите название, а не только пробелы.</p>
+      <label for="task-description">Описание <span class="optional-note">необязательно</span></label>
+      <textarea id="task-description" name="description" maxlength="600" rows="4" placeholder="Детали, которые важно не забыть"></textarea>
+      <label for="task-priority">Приоритет</label>
+      <select id="task-priority" name="priority"><option value="low">Низкий</option><option value="normal" selected>Обычный</option><option value="high">Высокий</option></select>
+      <p class="form-hint">Не нужно успевать всё. Начните с самого важного.</p>
+      <div class="dialog-actions"><button class="button button-secondary" type="button" data-close="task-dialog">Отмена</button><button id="save-task" class="button button-primary" type="submit">Создать задачу</button></div>
+    </form>
+  </dialog>
+
+  <dialog id="delete-dialog" class="dialog delete-dialog" aria-labelledby="delete-title" aria-describedby="delete-description">
+    <div class="delete-icon"><svg class="icon"><use href="#i-trash"/></svg></div>
+    <h2 id="delete-title">Удалить задачу?</h2>
+    <p id="delete-description">Задача «<span id="delete-task-name"></span>» будет удалена. Это действие нельзя отменить.</p>
+    <div class="dialog-actions"><button id="cancel-delete" class="button button-secondary" type="button" data-close="delete-dialog" autofocus>Оставить</button><button id="confirm-delete" class="button button-danger" type="button">Удалить</button></div>
+  </dialog>
+
+  <dialog id="reload-dialog" class="dialog" aria-labelledby="reload-title" aria-describedby="reload-description">
+    <h2 id="reload-title">Загрузить сохранённые задачи?</h2>
+    <p id="reload-description">Несохранённые изменения этой вкладки и открытой формы будут заменены данными из хранилища. Чтобы сохранить свой текст, сначала скопируйте его. Если данные не удастся прочитать, текущие задачи останутся в памяти.</p>
+    <div class="dialog-actions"><button id="cancel-reload" class="button button-secondary" type="button" data-close="reload-dialog" autofocus>Оставить изменения</button><button id="confirm-reload" class="button button-primary" type="button">Загрузить данные</button></div>
+  </dialog>
+
+  <template id="task-template">
+    <li class="task-card">
+      <input class="task-checkbox" type="checkbox">
+      <div class="task-content"><div class="task-title-row"><h3 class="task-title"></h3><span class="priority-badge"></span></div><p class="task-description"></p><div class="task-meta"><span class="task-status"></span><span class="meta-divider">·</span><time></time></div></div>
+      <div class="task-actions"><button class="icon-button edit-task" type="button"><svg class="icon"><use href="#i-edit"/></svg></button><button class="icon-button delete-task" type="button"><svg class="icon"><use href="#i-trash"/></svg></button></div>
+    </li>
+  </template>
+  <div id="announcer" class="sr-only" role="status" aria-live="polite" aria-atomic="true"></div>
+</body>
+</html>
